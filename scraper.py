@@ -1,58 +1,29 @@
-import os
-import requests
-from bs4 import BeautifulSoup
-from supabase import create_client, Client
+name: Scraping Diario Walmart
 
-# Limpiamos posibles espacios o diagonales extra en los secretos
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip().rstrip('/')
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "").strip()
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-def scrape_walmart():
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept-Language": "es-ES,es;q=0.9"
-    }
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-    url = "https://www.walmart.com.mx/supermercado"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install beautifulsoup4 requests supabase
 
-    try:
-        response = requests.get(url, headers=headers)
-        if response.status_code != 200:
-            print(f"Error al conectar con Walmart: {response.status_code}")
-            return []
-
-        soup = BeautifulSoup(response.text, 'html.parser')
-        productos = []
-
-        for item in soup.select('div.product-card'):
-            nombre_elem = item.select_first('h3')
-            precio_elem = item.select_first('span.price')
-
-            nombre = nombre_elem.text.strip() if nombre_elem else None
-            precio = precio_elem.text.strip() if precio_elem else None
-
-            if nombre and precio:
-                productos.append({
-                    "name": nombre,
-                    "price": precio
-                })
-
-        return productos
-    except Exception as e:
-        print(f"Error durante el scraping: {e}")
-        return []
-
-if _name_ == "_main_":
-    print("Iniciando scraping de Walmart...")
-    productos = scrape_walmart()
-    print(f"Se encontraron {len(productos)} productos.")
-
-    if productos:
-        try:
-            # Asegúrate de que tu tabla en Supabase se llame 'products'
-            data = supabase.table("products").insert(productos).execute()
-            print("Datos guardados exitosamente en Supabase.")
-        except Exception as e:
-            print(f"Error al guardar en Supabase: {e}")
+      - name: Run scraper script
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: python scraper.py
