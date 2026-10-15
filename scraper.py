@@ -1,27 +1,30 @@
-import os
-import requests
-from bs4 import BeautifulSoup
-from supabase import create_client, Client
+name: Scraping Diario Walmart
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+on:
+  schedule:
+    - cron: '0 8 * * *'  # Se ejecuta todos los días a las 8:00 AM UTC
+  workflow_dispatch:      # Permite ejecutar el script manualmente desde GitHub Actions
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
 
-def ejecutar_scraper():
-    print("Iniciando rastreo de Walmart...")
-    
-    # Datos que se enviarán a la tabla 'productos_walmart'
-    nombre_producto = "Producto de prueba"
-    precio = 45.00
-    
-    data = {
-        "nombre": nombre_producto,
-        "precio": precio
-    }
-    
-    response = supabase.table("productos_walmart").insert(data).execute()
-    print("¡Datos insertados en Supabase correctamente!", response)
+    steps:
+      - name: Copiar repositorio
+        uses: actions/checkout@v3
 
-if _name_ == "_main_":
-    ejecutar_scraper()
+      - name: Configurar entorno de Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 supabase
+
+      - name: Ejecutar script de Python
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: python scraper.py
