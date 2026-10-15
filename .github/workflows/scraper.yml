@@ -2,7 +2,7 @@ name: Scraping Diario Walmart
 
 on:
   schedule:
-    - cron: '0 8 * * *' # Se ejecuta todos los días a las 8:00 AM
+    - cron: '0 6:30' # Se ejecuta todos los días a las 8:00 AM
   workflow_dispatch: # Te permite darle clic a un botón para ejecutarlo manualmente
 
 jobs:
