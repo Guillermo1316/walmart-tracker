@@ -1,5 +1,3 @@
-name: Scraping Diario Walmart
-
 on:
   schedule:
     - cron: '0 8 * * *'
