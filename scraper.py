@@ -1,30 +1,17 @@
-name: Scraping Diario Walmart
+import os
+from supabase import create_client, Client
 
-on:
-  schedule:
-    - cron: '0 8 * * *'  # Se ejecuta todos los días a las 8:00 AM UTC
-  workflow_dispatch:      # Permite ejecutar el script manualmente desde GitHub Actions
+url: str = os.environ.get("SUPABASE_URL")
+key: str = os.environ.get("SUPABASE_KEY")
+supabase: Client = create_client(url, key)
 
-jobs:
-  run-scraper:
-    runs-on: ubuntu-latest
+data = {
+    "nombre": "Producto Prueba Walmart",
+    "precio": 99.50
+}
 
-    steps:
-      - name: Copiar repositorio
-        uses: actions/checkout@v3
-
-      - name: Configurar entorno de Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: Instalar dependencias
-        run: |
-          python -m pip install --upgrade pip
-          pip install requests beautifulsoup4 supabase
-
-      - name: Ejecutar script de Python
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-        run: python scraper.py
+try:
+    response = supabase.table("productos_walmart").insert(data).execute()
+    print("¡Datos insertados con éxito en Supabase!", response)
+except Exception as e:
+    print("Error al insertar los datos:", e)
