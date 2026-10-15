@@ -22,5 +22,5 @@ def ejecutar_scraper():
     
     print("¡Datos procesados con éxito!")
 
-if _name_ == "_main_":
+if __name__ == "_main_":
     ejecutar_scraper()
