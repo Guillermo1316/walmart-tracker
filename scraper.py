@@ -1,4 +1,4 @@
-name: Scraping Diario Walmart
+
 
 on:
   schedule:
